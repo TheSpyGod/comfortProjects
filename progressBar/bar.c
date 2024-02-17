@@ -40,7 +40,6 @@ void fetchJson() {
     }
 }
 
-
 void interface(char status) {
   switch (status) {
       case 'r':
