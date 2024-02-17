@@ -47,7 +47,6 @@ void interface(char status) {
         //updateJson();
   }
 }
-
 int main() {
  char status;
   while (status != 'q' && status != 'Q') {
