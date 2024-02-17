@@ -39,7 +39,6 @@ void fetchJson() {
      printf("\n");
     }
 }
-
 void interface(char status) {
   switch (status) {
       case 'r':
