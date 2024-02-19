@@ -2,6 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+// ANSI escape code to reset text color
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 int splitString(const char* string) {
    int result = 0;
     int number = 0;
@@ -60,7 +65,8 @@ int main() {
     printf("\tEnter numeric expression: ");
     fgets(string, sizeof(string), stdin);
     int result = splitString(string);
-    printf("Result: %.2d\n", result);
+    printf("\tResult: ");
+    printf(ANSI_COLOR_GREEN " %.2d\n" ANSI_COLOR_RESET,result);
     printf("Continue? q/Q");
     scanf(" %c", &choice);
     getchar();
