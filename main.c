@@ -3,24 +3,11 @@
 #include <stdlib.h>
 #include <ctype.h>
 int splitString(const char* string) {
-    /*int length = strlen(string);
-    int start = 0;
-    int end;
-
-    for (int i = 0; i <= length; i++) {
-        if (string[i] == ' ' || string[i] == '\0') {
-            end = i;
-            for (int j = start; j < end; j++) {
-                putchar(string[j]);
-            }
-            putchar('\n');
-            start = i + 1;
-        }
-    }*/
-    int result = 0;
+   int result = 0;
     int number = 0;
     char opp = '+';
-
+    //Goes through string ignoring white space, checks if digit then adds to number temp.
+    //Checks if symbol, chooses operation via switch, and modifies result.
     for (int i = 0; string[i] != '\0'; i++) {
       if (isdigit(string[i])) {
         number = number * 10 + (string[i] - '0');
@@ -39,10 +26,12 @@ int splitString(const char* string) {
                     result /= number;
                     break;
             }
+        //Reset number temp, update Opperation
         number = 0;
         opp = string[i];
       }
    }
+    //Last Opperation
    switch(opp) {
         case '+':
             result += number;
@@ -68,7 +57,7 @@ int main() {
     printf("\tProject Calculator\n");
  
     do {
-    printf("Enter numeric expression: ");
+    printf("\tEnter numeric expression: ");
     fgets(string, sizeof(string), stdin);
     int result = splitString(string);
     printf("Result: %.2d\n", result);
