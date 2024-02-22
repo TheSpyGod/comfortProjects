@@ -1,60 +1,94 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <mysql/mysql.h>
 #include <json-c/json.h>
-#include <ctype.h>
 
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-// ANSI escape code to reset text color
-#define ANSI_COLOR_RESET   "\x1b[0m"
+void dbconn(const char *db_host, const char *db_user, const char *db_password, const char *db_name) {
+    MYSQL *conn = mysql_init(NULL);
+    MYSQL_RES *res;
+    MYSQL_ROW row;
 
-void fetchJson() {
-  
-  // You can implement this function to fetch JSON data
-   FILE *fp;
+    if (conn == NULL) {
+        fprintf(stderr, "Error: %s\n", mysql_error(conn));
+        exit(2);
+    }
+
+    if (mysql_real_connect(conn, db_host, db_user, db_password, db_name, 0, NULL, 0) == NULL) {
+        fprintf(stderr, "Error: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        exit(2);
+    }
+
+    if (mysql_query(conn, "SELECT IFNULL(pochodne, 'null'), IFNULL(calki, 'null'), IFNULL(macierze, 'null'), IFNULL(p_projekty, 'null'), IFNULL(p_jezyki, 'null'), IFNULL(p_czas, 'null'), IFNULL(a_projekty, 'null'), IFNULL(a_kursy, 'null'), IFNULL(a_czas, 'null'), IFNULL(szeregi, 'null') FROM progress")) {
+        fprintf(stderr, "Error: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        exit(2);
+    }
+
+    res = mysql_use_result(conn);
+
+    // Print header row
+    printf("+----------+-------+----------+------------+----------+--------+------------+---------+--------+---------+\n");
+    printf("| pochodne | calki | macierze | p_projekty | p_jezyki | p_czas | a_projekty | a_kursy | a_czas | szeregi |\n");
+    printf("+----------+-------+----------+------------+----------+--------+------------+---------+--------+---------+\n");
+
+    // Print data rows
+    while ((row = mysql_fetch_row(res)) != NULL) {
+        printf("| %-7s | %-5s | %-8s | %-10s | %-8s | %-6s | %-10s | %-7s | %-6s | %-7s |\n",
+               row[1], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]);
+    }
+
+    // Print bottom border
+    printf("+----------+-------+----------+------------+----------+--------+------------+---------+--------+---------+\n");
+
+    mysql_free_result(res);
+    mysql_close(conn);
+}
+
+void readConfig() {
+    FILE *fp = fopen("config.json", "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Error: Cannot open configuration file.\n");
+        exit(2);
+    }
+
     char buffer[1024];
-    struct json_object *parsed_json;
-
-    fp = fopen("info.json", "r");
-    fread(buffer, 1024, 1, fp);
+    fread(buffer, 1, sizeof(buffer), fp);
     fclose(fp);
 
-    parsed_json = json_tokener_parse(buffer);
+    json_object *config = json_tokener_parse(buffer);
+    if (config == NULL) {
+        fprintf(stderr, "Error: Invalid configuration format.\n");
+        exit(2);
+    }
 
-    // Iterate over each category
-    json_object_object_foreach(parsed_json, key, val) {
-        printf("\n\t\t%s:\n\n", key);
+    const char *db_host = json_object_get_string(json_object_object_get(config, "db_host"));
+    const char *db_user = json_object_get_string(json_object_object_get(config, "db_user"));
+    const char *db_password = json_object_get_string(json_object_object_get(config, "db_password"));
+    const char *db_name = json_object_get_string(json_object_object_get(config, "db_name"));
 
-        // Assuming each category contains an array of objects
-        json_object *category_array = val;
-        for (int i = 0; i < json_object_array_length(category_array); i++) {
-            // Iterate over each subject within the category
-            json_object *category_obj = json_object_array_get_idx(category_array, i);
-            json_object_object_foreach(category_obj, sub_key, sub_val) {
-               printf("%s: ", sub_key);
-                // Print the number with green color
-                printf(ANSI_COLOR_GREEN "\t%d  " ANSI_COLOR_RESET, json_object_get_int(sub_val));
-            }
-        }
-     printf("\n");
+    dbconn(db_host, db_user, db_password, db_name);
+}
+
+void interface(char status) {
+    switch (status) {
+        case 'r':
+        case 'R':
+            readConfig();
+            break;
+        default:
+            break;
     }
 }
-void interface(char status) {
-  switch (status) {
-      case 'r':
-        fetchJson();
-      //case 'u':
-        //updateJson();
-  }
-}
+
 int main() {
- char status;
-  while (status != 'q' && status != 'Q') {
-  status = ' ';
-  printf("Update or Review studies? R - review, U - Update\n");
-  scanf("%c", &status);
-  interface(status);
-  getchar();
-  };
+    char status;
+    while (status != 'q' && status != 'Q') {
+        status = ' ';
+        printf("\nUpdate or Review studies? R - review, U - Update\n");
+        scanf(" %c", &status);
+        interface(status);
+        getchar();
+    };
     return 0;
 }
