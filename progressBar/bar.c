@@ -82,11 +82,11 @@ void interface(char status) {
 }
 
 int main() {
+    printf("\nUpdate or Review studies? R - review, U - Update\n");
     char status;
     while (status != 'q' && status != 'Q') {
         status = ' ';
-        printf("\nUpdate or Review studies? R - review, U - Update\n");
-        scanf(" %c", &status);
+         scanf(" %c", &status);
         interface(status);
         getchar();
     };
